@@ -17,6 +17,15 @@ from contextlib import contextmanager
 import math
 import random
 
+def haversine(lat1, lon1, lat2, lon2):
+    """Calculate the great circle distance in kilometers between two points on the earth."""
+    R = 6371.0 # Radius of earth in kilometers
+    dLat = math.radians(lat2 - lat1)
+    dLon = math.radians(lon2 - lon1)
+    a = math.sin(dLat / 2)**2 + math.cos(math.radians(lat1)) * math.cos(math.radians(lat2)) * math.sin(dLon / 2)**2
+    c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
+    return R * c
+
 app = Flask(__name__)
 app.secret_key = "attend_enterprise_2024"
 
@@ -343,37 +352,37 @@ def page(content, title="Dashboard", active="dashboard"):
 <style>
 /* ══ DESIGN TOKENS ══════════════════════════════════════════════════════════ */
 :root {
-    --bg:        #F0F2F8;
-    --bg2:       #E8EBF4;
+    --bg:        #F4F7FC;
+    --bg2:       #E2E8F0;
     --surface:   #FFFFFF;
-    --surface2:  #F7F9FC;
-    --glass:     rgba(255,255,255,0.72);
-    --glass-b:   rgba(255,255,255,0.45);
-    --border:    #DDE2EF;
-    --border2:   #EEF1F8;
-    --text:      #0D1117;
-    --text2:     #4A5568;
-    --muted:     #8A94A6;
-    --blue:      #2F6FED;
-    --blue2:     #1A4FBF;
-    --blue-lt:   #EFF4FF;
-    --blue-mid:  #C7D9FC;
+    --surface2:  #F8FAFC;
+    --glass:     rgba(255,255,255,0.85);
+    --glass-b:   rgba(255,255,255,0.55);
+    --border:    #E2E8F0;
+    --border2:   #F1F5F9;
+    --text:      #0F172A;
+    --text2:     #475569;
+    --muted:     #64748B;
+    --blue:      #3B82F6;
+    --blue2:     #1D4ED8;
+    --blue-lt:   #EFF6FF;
+    --blue-mid:  #BFDBFE;
     --indigo:    #4F46E5;
-    --green:     #0EA86D;
-    --green-lt:  #EAFAF3;
-    --red:       #E53935;
-    --red-lt:    #FFF0F0;
+    --green:     #10B981;
+    --green-lt:  #ECFDF5;
+    --red:       #EF4444;
+    --red-lt:    #FEF2F2;
     --amber:     #F59E0B;
     --amber-lt:  #FFFBEB;
-    --violet:    #7C3AED;
+    --violet:    #8B5CF6;
     --pink:      #EC4899;
-    --sidebar:   256px;
-    --radius:    14px;
-    --shadow-sm: 0 1px 4px rgba(0,0,0,.06), 0 0 0 1px rgba(0,0,0,.04);
-    --shadow:    0 4px 20px rgba(0,0,0,.08), 0 1px 4px rgba(0,0,0,.05);
-    --shadow-lg: 0 12px 40px rgba(0,0,0,.12), 0 2px 8px rgba(0,0,0,.06);
-    --glow-blue: 0 0 24px rgba(47,111,237,.18);
-    --glow-green:0 0 24px rgba(14,168,109,.15);
+    --sidebar:   260px;
+    --radius:    16px;
+    --shadow-sm: 0 2px 8px rgba(15, 23, 42, 0.04), 0 0 0 1px rgba(15, 23, 42, 0.02);
+    --shadow:    0 12px 32px rgba(15, 23, 42, 0.08), 0 2px 6px rgba(15, 23, 42, 0.04);
+    --shadow-lg: 0 24px 48px rgba(15, 23, 42, 0.12), 0 8px 16px rgba(15, 23, 42, 0.06);
+    --glow-blue: 0 0 32px rgba(59,130,246,0.25);
+    --glow-green:0 0 32px rgba(16,185,129,0.2);
 }
 
 /* ── BASE ── */
@@ -382,11 +391,11 @@ body {
     font-family: 'DM Sans', system-ui, sans-serif;
     background: var(--bg);
     color: var(--text);
-    margin: 0; font-size: 14px; line-height: 1.55;
+    margin: 0; font-size: 14px; line-height: 1.6;
     -webkit-font-smoothing: antialiased;
     background-image:
-        radial-gradient(ellipse 80% 60% at 20% -10%, rgba(47,111,237,.07) 0%, transparent 60%),
-        radial-gradient(ellipse 60% 40% at 80% 110%, rgba(79,70,229,.06) 0%, transparent 55%);
+        radial-gradient(ellipse 90% 70% at 10% -10%, rgba(59,130,246,.08) 0%, transparent 60%),
+        radial-gradient(ellipse 70% 50% at 90% 110%, rgba(79,70,229,.07) 0%, transparent 60%);
     background-attachment: fixed;
 }
 h1,h2,h3,h4,h5 { font-family: 'Syne', sans-serif; }
@@ -480,18 +489,18 @@ h1,h2,h3,h4,h5 { font-family: 'Syne', sans-serif; }
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: var(--radius);
-    transition: box-shadow .25s ease, border-color .25s ease, transform .25s ease;
+    transition: box-shadow .3s cubic-bezier(.16,1,.3,1), transform .3s cubic-bezier(.16,1,.3,1), border-color .3s;
 }
 .card-glass {
     background: var(--glass);
-    backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-    border: 1px solid rgba(255,255,255,.7);
+    backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
+    border: 1px solid rgba(255,255,255,.8);
 }
 .card:hover { box-shadow: var(--shadow); }
 .card-hover:hover {
-    box-shadow: 0 8px 32px rgba(47,111,237,.12);
+    box-shadow: 0 16px 40px rgba(59,130,246,.12);
     border-color: var(--blue-mid);
-    transform: translateY(-3px);
+    transform: translateY(-4px);
 }
 .card-header {
     padding: 18px 22px;
@@ -1691,93 +1700,136 @@ def student_view():
 *{{box-sizing:border-box;margin:0;padding:0}}
 body{{
     font-family:'DM Sans',sans-serif;
-    background:linear-gradient(135deg,#0D1117 0%,#1A2540 50%,#0D1117 100%);
+    background:linear-gradient(135deg,#020617 0%,#0F172A 50%,#020617 100%);
     color:#0D1117;min-height:100vh;
     display:flex;align-items:center;justify-content:center;padding:20px;
     overflow:hidden;
 }}
-.bg-orb{{position:fixed;border-radius:50%;filter:blur(60px);pointer-events:none}}
+.bg-orb{{position:fixed;border-radius:50%;filter:blur(80px);pointer-events:none;animation:orbFloat 10s ease-in-out infinite alternate}}
+@keyframes orbFloat {{ 0%{{transform:translate(0,0)}} 100%{{transform:translate(30px,-50px)}} }}
 .card{{
-    background:rgba(255,255,255,.97);
-    border-radius:24px;
-    box-shadow:0 24px 80px rgba(0,0,0,.4),0 0 0 1px rgba(255,255,255,.12);
-    padding:40px 36px;max-width:420px;width:100%;position:relative;overflow:hidden;
-    animation:cardIn .7s cubic-bezier(.16,1,.3,1) both;
+    background:rgba(255,255,255,.98);
+    border-radius:30px;
+    box-shadow:0 30px 100px rgba(0,0,0,.6), inset 0 0 0 1px rgba(255,255,255,.8);
+    padding:45px 40px;max-width:440px;width:100%;position:relative;overflow:hidden;
+    animation:cardIn .8s cubic-bezier(.16,1,.3,1) both;
+    backdrop-filter:blur(20px);
 }}
-@keyframes cardIn{{from{{opacity:0;transform:translateY(30px) scale(.96)}}to{{opacity:1;transform:translateY(0) scale(1)}}}}
+@keyframes cardIn{{from{{opacity:0;transform:translateY(40px) scale(.94)}}to{{opacity:1;transform:translateY(0) scale(1)}}}}
 .accent-bar{{
-    position:absolute;top:0;left:0;right:0;height:4px;
-    background:linear-gradient(90deg,#2F6FED,#4F46E5,#7C3AED);
+    position:absolute;top:0;left:0;right:0;height:5px;
+    background:linear-gradient(90deg,#3B82F6,#4F46E5,#8B5CF6,#EC4899);
+    background-size: 200% 200%;
+    animation: gradientShift 4s ease infinite;
 }}
-.subject{{font-family:'Syne',sans-serif;font-size:21px;font-weight:800;color:#0D1117;margin:14px 0 4px;letter-spacing:-.02em}}
-.sub-label{{font-size:12px;color:#8A94A6;margin-bottom:28px}}
+@keyframes gradientShift {{ 0% {{background-position: 0% 50%}} 50% {{background-position: 100% 50%}} 100% {{background-position: 0% 50%}} }}
+.subject{{font-family:'Syne',sans-serif;font-size:24px;font-weight:800;color:#0F172A;margin:18px 0 6px;letter-spacing:-.03em}}
+.sub-label{{font-size:13px;color:#64748B;margin-bottom:32px}}
 .live-badge{{
     display:inline-flex;align-items:center;gap:6px;
-    background:linear-gradient(135deg,#EAFAF3,#F0FFF9);
+    background:linear-gradient(135deg,#ECFDF5,#F0FFF9);
     border:1px solid #A3E6CC;border-radius:20px;
-    padding:5px 14px;font-size:12px;font-weight:600;color:#059669;margin-bottom:20px;
+    padding:6px 16px;font-size:12.5px;font-weight:600;color:#059669;margin-bottom:20px;
+    box-shadow: 0 4px 12px rgba(16,185,129,.1);
 }}
-.dot{{width:7px;height:7px;background:#0EA86D;border-radius:50%;animation:p 2.2s infinite}}
-@keyframes p{{0%{{box-shadow:0 0 0 0 rgba(14,168,109,.4)}}70%{{box-shadow:0 0 0 9px rgba(14,168,109,0)}}100%{{box-shadow:0 0 0 0 rgba(14,168,109,0)}}}}
-.input-wrap{{position:relative;margin-bottom:18px}}
-.input-wrap svg{{position:absolute;left:14px;top:50%;transform:translateY(-50%);pointer-events:none}}
+.dot{{width:8px;height:8px;background:#10B981;border-radius:50%;animation:p 2.2s infinite}}
+@keyframes p{{0%{{box-shadow:0 0 0 0 rgba(16,185,129,.5)}}70%{{box-shadow:0 0 0 10px rgba(16,185,129,0)}}100%{{box-shadow:0 0 0 0 rgba(16,185,129,0)}}}}
+.input-wrap{{position:relative;margin-bottom:22px}}
+.input-wrap svg{{position:absolute;left:16px;top:50%;transform:translateY(-50%);pointer-events:none}}
 input{{
-    width:100%;padding:14px 14px 14px 44px;
-    border:2px solid #DDE2EF;border-radius:12px;
-    font-size:15px;font-family:'DM Sans',sans-serif;color:#0D1117;outline:none;
-    transition:border-color .2s,box-shadow .2s;background:#F7F9FC;
+    width:100%;padding:16px 16px 16px 48px;
+    border:2px solid #E2E8F0;border-radius:16px;
+    font-size:15px;font-family:'DM Sans',sans-serif;color:#0F172A;outline:none;
+    transition:all .3s cubic-bezier(.16,1,.3,1);background:#F8FAFC;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,.02);
 }}
-input:focus{{border-color:#2F6FED;box-shadow:0 0 0 4px rgba(47,111,237,.12);background:white}}
-input::placeholder{{color:#A0AABC}}
+input:focus{{border-color:#3B82F6;box-shadow:0 0 0 4px rgba(59,130,246,.15), inset 0 2px 4px rgba(0,0,0,.01);background:white;transform:translateY(-2px)}}
+input::placeholder{{color:#94A3B8}}
 .btn{{
-    width:100%;padding:15px;
-    background:linear-gradient(135deg,#2F6FED,#4F46E5);
-    color:white;border:none;border-radius:12px;
-    font-family:'Syne',sans-serif;font-weight:700;font-size:16px;
-    cursor:pointer;transition:all .22s;letter-spacing:-.01em;
-    box-shadow:0 4px 18px rgba(47,111,237,.4);
+    width:100%;padding:16px;
+    background:linear-gradient(135deg,#3B82F6,#4F46E5);
+    color:white;border:none;border-radius:16px;
+    font-family:'Syne',sans-serif;font-weight:700;font-size:16.5px;
+    cursor:pointer;transition:all .3s cubic-bezier(.16,1,.3,1);letter-spacing:-.01em;
+    box-shadow:0 8px 24px rgba(59,130,246,.4), inset 0 1px 0 rgba(255,255,255,.2);
     position:relative;overflow:hidden;
 }}
-.btn:hover{{transform:translateY(-2px);box-shadow:0 8px 28px rgba(47,111,237,.5)}}
-.btn:active{{transform:translateY(0)}}
-.footer{{text-align:center;font-size:11px;color:#A0AABC;margin-top:20px}}
+.btn:hover:not(:disabled){{transform:translateY(-3px);box-shadow:0 12px 32px rgba(59,130,246,.5), inset 0 1px 0 rgba(255,255,255,.3)}}
+.btn:active:not(:disabled){{transform:translateY(0);box-shadow:0 4px 12px rgba(59,130,246,.3)}}
+.btn:disabled{{background:linear-gradient(135deg,#94A3B8,#64748B);box-shadow:none;cursor:not-allowed;transform:none}}
+.footer{{text-align:center;font-size:11.5px;color:#94A3B8;margin-top:24px;font-weight:500}}
+#geo-status {{ font-size:12px; font-weight:600; display:flex; align-items:center; justify-content:center; gap:6px; margin-top:16px; color:#F59E0B; transition: color .3s; }}
 </style>
 </head>
 <body>
-<div class="bg-orb" style="width:400px;height:400px;background:rgba(47,111,237,.15);top:-100px;right:-100px"></div>
-<div class="bg-orb" style="width:300px;height:300px;background:rgba(79,70,229,.12);bottom:-80px;left:-80px"></div>
+<div class="bg-orb" style="width:450px;height:450px;background:rgba(59,130,246,.18);top:-150px;right:-150px"></div>
+<div class="bg-orb" style="width:350px;height:350px;background:rgba(124,58,237,.15);bottom:-100px;left:-100px;animation-delay: -5s"></div>
 <div class="card">
     <div class="accent-bar"></div>
     <div style="text-align:center">
-        <div style="width:60px;height:60px;background:linear-gradient(135deg,#EFF4FF,#C7D9FC);border-radius:16px;margin:0 auto 12px;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(47,111,237,.2)">
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#2F6FED" stroke-width="2" stroke-linecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        <div style="width:68px;height:68px;background:linear-gradient(135deg,#EFF6FF,#DBEAFE);border-radius:20px;margin:0 auto 16px;display:flex;align-items:center;justify-content:center;box-shadow:0 8px 24px rgba(59,130,246,.25), inset 0 2px 4px rgba(255,255,255,.8)">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2.2" stroke-linecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
         </div>
         <div class="live-badge"><span class="dot"></span>Gate Open</div>
     </div>
     <div class="subject" style="text-align:center">{sess['subject']}</div>
-    <div class="sub-label" style="text-align:center">Secure Attendance Check-in · AttendIQ</div>
+    <div class="sub-label" style="text-align:center">Secure Proxy-Protected Check-in</div>
 
-    <form action="/mark" method="POST" onsubmit="onSub(this)">
+    <form action="/mark" method="POST" onsubmit="return onSub(this)">
         <input type="hidden" name="token" value="{token}">
         <input type="hidden" id="fp" name="fp">
+        <input type="hidden" id="lat" name="lat">
+        <input type="hidden" id="lon" name="lon">
+        
         <div class="input-wrap">
-            <svg width="18" height="18" fill="none" stroke="#A0AABC" stroke-width="2" viewBox="0 0 24 24">
+            <svg width="20" height="20" fill="none" stroke="#94A3B8" stroke-width="2.2" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4z"/>
             </svg>
             <input type="text" name="student_id" id="sid" placeholder="Enter your Student ID"
                    required autocomplete="off" autocapitalize="off">
         </div>
-        <button type="submit" class="btn" id="btn">Confirm Attendance →</button>
+        <button type="submit" class="btn" id="btn" disabled>Waiting for GPS...</button>
+        <div id="geo-status"><span class="dot" style="background:#F59E0B;animation:none;box-shadow:none"></span> Requesting NIET Campus Location...</div>
     </form>
-    <div class="footer">AttendIQ Enterprise · IIT Delhi</div>
+    <div class="footer">AttendIQ Enterprise · NIET Greater Noida</div>
 </div>
 <script>
 document.getElementById('fp').value=navigator.userAgent+'|'+screen.width+'x'+screen.height+'|'+navigator.language;
 document.getElementById('sid').focus();
+
+// Geolocation for NIET Campus Verification
+if (navigator.geolocation) {{
+    navigator.geolocation.getCurrentPosition(
+        function(pos) {{
+            document.getElementById('lat').value = pos.coords.latitude;
+            document.getElementById('lon').value = pos.coords.longitude;
+            const status = document.getElementById('geo-status');
+            status.innerHTML = '<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> Location Secured';
+            status.style.color = '#10B981';
+            const btn = document.getElementById('btn');
+            btn.disabled = false;
+            btn.innerText = 'Confirm Attendance →';
+        }},
+        function(err) {{
+            const status = document.getElementById('geo-status');
+            status.innerHTML = '⚠️ GPS Required for NIET Campus';
+            status.style.color = '#EF4444';
+        }},
+        {{ enableHighAccuracy: true, timeout: 10000 }}
+    );
+}} else {{
+    document.getElementById('geo-status').innerText = 'Geolocation not supported.';
+}}
+
 function onSub(f){{
+    if(!document.getElementById('lat').value) {{
+        alert("Please allow location access to verify you are on NIET campus.");
+        return false;
+    }}
     const b=document.getElementById('btn');
-    b.innerHTML='<svg width="18" height="18" fill="none" stroke="white" stroke-width="2.5" viewBox="0 0 24 24" style="animation:spin .7s linear infinite"><path stroke-linecap="round" d="M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.48 8.48l2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.48-8.48l2.83-2.83"/></svg> Verifying…';
-    b.disabled=true; b.style.background='linear-gradient(135deg,#6B7280,#4B5563)';
+    b.innerHTML='<svg width="20" height="20" fill="none" stroke="white" stroke-width="2.5" viewBox="0 0 24 24" style="animation:spin .7s linear infinite;display:inline-block;vertical-align:middle;margin-right:8px"><path stroke-linecap="round" d="M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.48 8.48l2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.48-8.48l2.83-2.83"/></svg> Verifying Identity...';
+    b.style.pointerEvents='none';
+    return true;
 }}
 </script>
 <style>@keyframes spin{{to{{transform:rotate(360deg)}}}}</style>
@@ -1786,9 +1838,9 @@ function onSub(f){{
 
     return """<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans&display=swap" rel="stylesheet">
-<style>body{font-family:'DM Sans',sans-serif;background:#0D1117;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;text-align:center}
-h2{font-family:'Syne',sans-serif;font-weight:800;font-size:22px;color:white;margin:12px 0 8px}p{color:#8A94A6;font-size:14px}</style>
-</head><body><div><div style="font-size:40px">⚠️</div><h2>Session Expired</h2><p>Please scan a valid QR code.</p></div></body></html>"""
+<style>body{font-family:'DM Sans',sans-serif;background:#0F172A;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;text-align:center}
+h2{font-family:'Syne',sans-serif;font-weight:800;font-size:24px;color:white;margin:16px 0 8px}p{color:#94A3B8;font-size:15px}</style>
+</head><body><div><div style="font-size:48px">⚠️</div><h2>Session Expired</h2><p>Please scan a valid QR code.</p></div></body></html>"""
 
 
 @app.route('/mark', methods=['POST'])
@@ -1796,6 +1848,45 @@ def mark_attendance():
     token = request.form.get('token')
     student_id = request.form.get('student_id', '').strip()
     fp = request.form.get('fp', 'unknown')
+    lat = request.form.get('lat')
+    lon = request.form.get('lon')
+
+    # Feature A: Proxy & VPN Detection Header Checks
+    is_proxy = False
+    proxy_headers = ['X-Forwarded-For', 'Via', 'X-Real-IP', 'Proxy-Connection', 'HTTP_X_FORWARDED_FOR']
+    for header in proxy_headers:
+        if request.headers.get(header):
+            is_proxy = True
+            break
+            
+    if is_proxy:
+        return """<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans&display=swap" rel="stylesheet">
+<style>body{font-family:'DM Sans',sans-serif;background:#0F172A;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;padding:20px}
+.c{background:rgba(255,255,255,.98);border-radius:24px;padding:40px;max-width:360px;width:100%;text-align:center;box-shadow:0 30px 60px rgba(0,0,0,.4)}
+h2{font-family:'Syne',sans-serif;color:#EF4444;margin:16px 0 8px;font-size:22px}p{color:#64748B;font-size:14px;margin-bottom:24px;line-height:1.6}</style>
+</head><body><div class="c"><div style="font-size:48px;margin-bottom:10px">🛡️</div>
+<h2>Proxy Detected</h2><p>Attendance sharing is prohibited. Please disable your VPN or Proxy to proceed.</p>
+</div></body></html>""", 403
+
+    # Feature B: Geolocation Validation (NIET Campus)
+    # NIET coordinates approx: 28.4629, 77.4904
+    distance = 999.0
+    if lat and lon:
+        try:
+            distance = haversine(28.4629, 77.4904, float(lat), float(lon))
+        except ValueError:
+            pass
+            
+    if distance > 0.5: # 500 meters radius restriction
+        return f"""<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans&display=swap" rel="stylesheet">
+<style>body{{font-family:'DM Sans',sans-serif;background:#0F172A;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;padding:20px}}
+.c{{background:rgba(255,255,255,.98);border-radius:24px;padding:40px;max-width:380px;width:100%;text-align:center;box-shadow:0 30px 60px rgba(0,0,0,.4)}}
+h2{{font-family:'Syne',sans-serif;color:#EF4444;margin:16px 0 8px;font-size:22px}}p{{color:#64748B;font-size:14px;margin-bottom:24px;line-height:1.6}}</style>
+</head><body><div class="c"><div style="font-size:48px;margin-bottom:10px">📍</div>
+<h2>Out of Campus Bounds</h2><p>You are currently <strong>{distance:.2f} km</strong> away from NIET campus.<br>You must be on campus to mark attendance.</p>
+</div></body></html>""", 403
 
     with get_db() as conn:
         sess = conn.execute("SELECT * FROM class_sessions WHERE token=? AND is_active=1", (token,)).fetchone()
